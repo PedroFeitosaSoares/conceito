@@ -5,6 +5,41 @@ from urllib.parse import urljoin
 import pandas as pd
 import os
 
+def limpar_tabela(df):
+    # Remove colunas totalmente vazias
+    df = df.dropna(axis=1, how='all')
+    
+    # Remove linhas totalmente vazias
+    df = df.dropna(axis=0, how='all')
+    
+    # Remove colunas duplicadas com base nos nomes das colunas
+    df = df.loc[:, ~df.columns.duplicated()]
+
+    # Remove linhas duplicadas
+    df = df.drop_duplicates()
+
+    # Preenche valores vazios em células com um marcador ou deixa como está (ex: "N/A")
+    df = df.fillna("N/A")
+
+    return df
+
+def converter_dataframe_para_dict(dataframes):
+    # Dicionário final com todas as tabelas
+    tabelas_dict = {}
+
+    for nome_tabela, df in dataframes.items():
+        # Cria o dicionário para a tabela atual
+        tabela_dict = {}
+
+        for i, linha in df.iterrows():
+            # Cria o dicionário da linha com chave como nome da coluna e valor como conteúdo da célula
+            tabela_dict[f"id={i}"] = linha.to_dict()
+
+        # Adiciona ao dicionário final usando o nome da tabela como chave
+        tabelas_dict[nome_tabela] = tabela_dict
+
+    return tabelas_dict
+
 def extrair_tabelas_para_dataframe(url, legendas):
     try:
         # Faz a requisição GET para obter o conteúdo da página
@@ -51,9 +86,16 @@ def extrair_tabelas_para_dataframe(url, legendas):
 
                 # Cria o DataFrame da tabela atual
                 df = pd.DataFrame(linhas, columns=headers)
+
+                # Limpar a tabela usando a função limpar_tabela
+                df = limpar_tabela(df)
+
+                # Armazena o DataFrame limpo no dicionário de dataframes
                 dataframes[legenda] = df
 
-        return dataframes
+        # Converter os dataframes para dicionários
+        tabelas_dict = converter_dataframe_para_dict(dataframes)
+        return tabelas_dict
 
     except requests.exceptions.RequestException as e:
         print(f"Erro ao acessar a URL: {e}")
@@ -65,16 +107,14 @@ load_dotenv()
 URL = os.getenv("URL")
 
 # Legendas das tabelas que queremos extrair
-legendas_tabelas = ["Documentos do Processo", "Movimentações do Processo"]
+legendas_tabelas = ["Documentos do Processo"]
 
-# Extrair as tabelas e organizá-las em DataFrames
-tabelas_df = extrair_tabelas_para_dataframe(URL, legendas_tabelas)
+# Extrair as tabelas e organizá-las em dicionários
+tabelas_dict = extrair_tabelas_para_dataframe(URL, legendas_tabelas)
 
-# Exibir e manipular as tabelas extraídas
-if tabelas_df:
-    for legenda, df in tabelas_df.items():
-        print(f"\nTabela: {legenda}")
-        print(df)
-
-        # Exemplo: Salvar a tabela em CSV
-        df.to_csv(f"{legenda}.csv", index=False)
+# Exibir o dicionário resultante
+if tabelas_dict:
+    for nome_tabela, conteudo in tabelas_dict.items():
+        print(f"\nTabela: {nome_tabela}")
+        for id_linha, dados_linha in conteudo.items():
+            print(f"{id_linha}: {dados_linha}")
