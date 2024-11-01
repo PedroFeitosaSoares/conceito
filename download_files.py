@@ -1,55 +1,62 @@
 import os
 import requests
+import re
 
-# Define the base URL
-base_url = "https://raw.githubusercontent.com/armandossrecife/mysummary/refs/heads/main/pdfs/"
+def download_pdfs(url):
+    download_folder = 'PDFs'
+    if not os.path.exists(download_folder):
+        os.makedirs(download_folder)
+        print(f"Directory '{download_folder}' created")
 
-# Defina o nome da pasta onde os PDFs serão salvos
-download_folder = 'PDFs'
+    # Verifica se a URL contém "idArquivo=", indicando um link direto para um único arquivo
+    if "idArquivo=" in url or url.endswith('.pdf'):
+        # Download de um único PDF
+        download_file(url, download_folder)
+    else:
+        # Download de uma sequência de PDFs do repositório
+        i = 1
+        while True:
+            pdf_url = f"{url.rstrip('/')}/d{i}.pdf"
+            print(f"Trying to download {pdf_url}")
+            if not download_file(pdf_url, download_folder):
+                print(f"No more files found after {i-1} downloads.")
+                break  # Sai do loop quando o arquivo não existe
+            i += 1
 
-# Verifique se a pasta existe, se não, crie-a
-if not os.path.exists(download_folder):
-    os.makedirs(download_folder)
-    print(f"Directory '{download_folder}' created")
-
-# Function to download a file without using tqdm
 def download_file(url, dest_folder):
-    filename = os.path.join(dest_folder, url.split("/")[-1])
-    
-    # Send HTTP request and get the total file size for the progress display
     response = requests.get(url, stream=True)
-    
-    # Check if the file exists (status code 200)
     if response.status_code != 200:
+        print(f"Failed to download: {url}")
         return False
+
+    # Tenta extrair o nome do arquivo do cabeçalho Content-Disposition
+    content_disposition = response.headers.get('content-disposition')
+    if content_disposition:
+        match = re.search(r'filename="(.+)"', content_disposition)
+        if match:
+            filename = match.group(1)
+        else:
+            filename = url.split("/")[-1]
+    else:
+        filename = url.split("/")[-1]
+
+    filename = re.sub(r'[^\w\-.]', '_', filename)  # Remove caracteres inválidos
+    if not filename.endswith('.pdf'):
+        filename += '.pdf'  # Garante a extensão .pdf
+    filepath = os.path.join(dest_folder, filename)
 
     total_size = int(response.headers.get('content-length', 0))
     downloaded_size = 0
 
-    # Download the file with manual progress tracking
-    with open(filename, 'wb') as file:
+    with open(filepath, 'wb') as file:
         for data in response.iter_content(chunk_size=1024):
             file.write(data)
             downloaded_size += len(data)
-            # Display progress in percentage
-            progress = (downloaded_size / total_size) * 100
-            print(f"\rDownloading {filename}: {progress:.2f}%", end="")
+            if total_size > 0:  # Verifica se o tamanho total é conhecido
+                progress = (downloaded_size / total_size) * 100
+                print(f"\rDownloading {filename}: {progress:.2f}%", end="")
+            else:
+                print(f"\rDownloading {filename}: {downloaded_size} bytes downloaded", end="")
 
     print(f"\nDownloaded: {filename}")
     return True
-
-# Loop to try downloading files until one fails
-i = 1
-while True:
-    url = f"{base_url}d{i}.pdf"
-    print(f"Trying to download {url}")
-    try:
-        if not download_file(url, download_folder):
-            print(f"No more files found after {i-1} downloads.")
-            break
-    except Exception as e:
-        print(f"Error downloading {url}: {e}")
-        break
-    i += 1
-
-print("Download process finished!")
