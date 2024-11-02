@@ -27,14 +27,3 @@ def ler_texto_arquivos_diretorio(diretorio):
         elif arquivo.lower().endswith(".html"):
             textos[arquivo] = ler_texto_html(caminho_arquivo)
     return textos
-
-diretorio = "Arquivos_Processo"  # Substitua pelo caminho do diretório onde estão seus arquivos
-
-# Extrair o texto de todos os arquivos PDF e HTML do diretório
-textos_extraidos = ler_texto_arquivos_diretorio(diretorio)
-
-# Exibir o texto extraído
-for nome_arquivo, texto in textos_extraidos.items():
-    print(f"Texto extraído de {nome_arquivo}:")
-    print(texto[:500])  # Exibe os primeiros 500 caracteres para cada arquivo
-    print("-" * 50)
