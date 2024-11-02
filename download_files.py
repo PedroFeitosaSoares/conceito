@@ -70,5 +70,3 @@ def download_file(url, dest_folder, is_pdf=True):
 
     print(f"\nDownloaded: {filename}")
     return True
-
-download_files("https://www.sipac.ufpi.br/public/jsp/processos/documento_visualizacao.jsf?idDoc=2068823")
