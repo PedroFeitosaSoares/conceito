@@ -94,34 +94,28 @@ def tratamento_movimentacoes_processos(df):
     return df
 
 def tratamento_documentos_processos(df):
-    # Faz uma cópia do DataFrame original
+    # Faz uma cópia do DataFrame original para preservar os dados
     df_copy = df.copy()
-    # Exclui as duas últimas colunas do DataFrame original
-    df = df.iloc[:, :-2]
-    # Cria uma nova coluna chamada 'link' no DataFrame original
-    df['link'] = None
-    
-    # Adiciona o conteúdo da penúltima coluna do df_copy na nova coluna 'link' do df original
-    df['link'] = df_copy.iloc[:, -2]
-    
+
+    # Exclui as duas últimas colunas do DataFrame original e modifica df diretamente
+    df = df.iloc[:, :-2].copy()  # Garante que df seja uma cópia independente
+
+    # Cria uma nova coluna chamada 'link' no DataFrame original usando .loc
+    df.loc[:, 'link'] = df_copy.iloc[:, -2].values  # Usa valores da penúltima coluna de df_copy
+
     return df
     
+def exec(URL):
+    # Legendas das tabelas que queremos extrair
+    legendas_tabelas = ["Documentos do Processo", "Movimentações do Processo"]
+    # Extrair as tabelas e organizá-las em DataFrames
+    tabelas_df = extrair_tabelas_para_dataframe(URL, legendas_tabelas)
 
-# Carregar a URL do .env
-load_dotenv()
-URL = os.getenv("URL")
+    # Exibir e manipular as tabelas extraídas
+    if tabelas_df:
+        for legenda, df in tabelas_df.items():
+            # Exemplo: Salvar a tabela em CSV
+            df.to_csv(f"{legenda}.csv", index=False)
 
-# Legendas das tabelas que queremos extrair
-legendas_tabelas = ["Documentos do Processo", "Movimentações do Processo"]
 
-# Extrair as tabelas e organizá-las em DataFrames
-tabelas_df = extrair_tabelas_para_dataframe(URL, legendas_tabelas)
-
-# Exibir e manipular as tabelas extraídas
-if tabelas_df:
-    for legenda, df in tabelas_df.items():
-        print(f"\nTabela: {legenda}")
-        print(df)
-
-        # Exemplo: Salvar a tabela em CSV
-        df.to_csv(f"{legenda}.csv", index=False)
+exec("https://www.sipac.ufpi.br/public/jsp/processos/processo_detalhado.jsf?id=594067")
