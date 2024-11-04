@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from urllib.parse import urljoin
 import pandas as pd
 import os
+import re
 
 def extrair_tabelas_para_dataframe(url, legendas):
     try:
@@ -39,10 +40,22 @@ def extrair_tabelas_para_dataframe(url, legendas):
                     for coluna in linha.find_all(['th', 'td']):
                         texto = coluna.get_text(strip=True)
 
-                        # Extrai todos os links na célula, incluindo os de sublistagens
-                        links = [urljoin(url, a['href']) for a in coluna.find_all('a', href=True)]
+                        # Extrai todos os links na célula, incluindo sublistagens
+                        links = []
+                        for a in coluna.find_all('a', href=True):
+                            href = a.get('href', '')
+
+                            # Caso o href não seja útil, verifica o onclick
+                            if href == '#':
+                                onclick = a.get('onclick', '')
+                                match = re.search(r"window\.open\('([^']+)'", onclick)
+                                if match:
+                                    href = match.group(1)
+
+                            links.append(urljoin(url, href))
+
                         if links:
-                            texto += "" + " | ".join(links) + ""  # Anexa todos os links ao texto da célula
+                            texto += " " + " | ".join(links) + ""  # Anexa todos os links ao texto da célula
 
                         dados_linha.append(texto)
 
@@ -62,7 +75,6 @@ def extrair_tabelas_para_dataframe(url, legendas):
     except requests.exceptions.RequestException as e:
         print(f"Erro ao acessar a URL: {e}")
         return None
-
 def tratamento_movimentacoes_processos(df):
     # Remove linhas com índices 1, 4, 7, etc., mantendo apenas os índices pares para preenchimento
     df = df.drop(df.index[range(1, len(df), 3)]).reset_index(drop=True)
