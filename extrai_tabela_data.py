@@ -39,10 +39,10 @@ def extrair_tabelas_para_dataframe(url, legendas):
                     for coluna in linha.find_all(['th', 'td']):
                         texto = coluna.get_text(strip=True)
 
-                        # Verifica se há link na célula e anexa ao texto
-                        link = coluna.find('a', href=True)
-                        if link:
-                            texto += f"{urljoin(url, link['href'])}"
+                        # Extrai todos os links na célula, incluindo os de sublistagens
+                        links = [urljoin(url, a['href']) for a in coluna.find_all('a', href=True)]
+                        if links:
+                            texto += "" + " | ".join(links) + ""  # Anexa todos os links ao texto da célula
 
                         dados_linha.append(texto)
 
@@ -84,10 +84,8 @@ def tratamento_movimentacoes_processos(df):
 def tratamento_documentos_processos(df):
     # Faz uma cópia do DataFrame original
     df_copy = df.copy()
-    
     # Exclui as duas últimas colunas do DataFrame original
     df = df.iloc[:, :-2]
-    
     # Cria uma nova coluna chamada 'link' no DataFrame original
     df['link'] = None
     
