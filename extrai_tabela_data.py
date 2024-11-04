@@ -42,7 +42,7 @@ def extrair_tabelas_para_dataframe(url, legendas):
                         # Verifica se há link na célula e anexa ao texto
                         link = coluna.find('a', href=True)
                         if link:
-                            texto += f" (Link: {urljoin(url, link['href'])})"
+                            texto += f"{urljoin(url, link['href'])}"
 
                         dados_linha.append(texto)
 
@@ -68,13 +68,13 @@ def tratamento_movimentacoes_processos(df):
     df = df.drop(df.index[range(1, len(df), 3)]).reset_index(drop=True)
     
     # Criar as novas colunas
-    df[['Despacho', "Link despacho"]] = None
+    df[['Despacho', "Link"]] = None
     
     # Preencher as colunas 'Despacho' e 'Link despacho' dos índices pares
     # com os valores das colunas 'unidade origem' e 'unidade destino' dos índices ímpares
     for i in range(0, len(df) - 1, 2):
         df.at[i, 'Despacho'] = df.at[i + 1, 'Unidade Origem']
-        df.at[i, 'Link despacho'] = df.at[i + 1, 'Unidade Destino']
+        df.at[i, 'Link'] = df.at[i + 1, 'Unidade Destino']
         
     #remover as linhas impares
     df = df.drop(df.index[range(1, len(df), 2)]).reset_index(drop=True)
