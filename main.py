@@ -6,27 +6,32 @@ from extrai_informacao_html import extrair_data
 from agent_refatorado import AgentResumo
 import os
 
-extrair_data("https://www.sipac.ufpi.br/public/jsp/processos/processo_detalhado.jsf?id=673322#")
-
 load_dotenv('.env')
 
 agent = AgentResumo(os.getenv("API_KEY"))
 
-limpar_arquivos()
+def main():
+    link = str(input("Forneça o link o qual você quer o resuo dos processos: "))
+    extrair_data(link)
+    limpar_arquivos()
 
-df = pd.read_csv("Documentos do Processo.csv")
+    df = pd.read_csv("Documentos do Processo.csv")
 
-documentos_nao_baixados = 0
+    documentos_nao_baixados = 0
 
-for link in df['link']:
-    if not isinstance(link, str) or pd.isna(link):
-        print(f"Ignorado: '{link}' não é uma URL válida.")
-        documentos_nao_baixados = documentos_nao_baixados + 1
-    else:
-        download_files(link)
+    for link in df['link']:
+        if not isinstance(link, str) or pd.isna(link):
+            print(f"Ignorado: '{link}' não é uma URL válida.")
+            documentos_nao_baixados = documentos_nao_baixados + 1
+        else:
+            download_files(link)
 
-textos_processos = ler_texto_arquivos_diretorio("Arquivos_Processo")
-resumo = agent.gerar_resumo(textos_processos)
+    textos_processos = ler_texto_arquivos_diretorio("Arquivos_Processo")
+    resumo = agent.gerar_resumo(textos_processos)
 
-print(resumo)
-print(documentos_nao_baixados)
+    print(resumo)
+    print(documentos_nao_baixados)
+
+
+if __name__ == '__main__':
+    main()
