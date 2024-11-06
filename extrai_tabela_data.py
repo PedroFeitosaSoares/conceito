@@ -105,7 +105,7 @@ def tratamento_documentos_processos(df):
 
     return df
     
-def exec(URL):
+def extrair_data(URL):
     # Legendas das tabelas que queremos extrair
     legendas_tabelas = ["Documentos do Processo", "Movimentações do Processo"]
     # Extrair as tabelas e organizá-las em DataFrames
@@ -116,6 +116,3 @@ def exec(URL):
         for legenda, df in tabelas_df.items():
             # Exemplo: Salvar a tabela em CSV
             df.to_csv(f"{legenda}.csv", index=False)
-
-
-exec("https://www.sipac.ufpi.br/public/jsp/processos/processo_detalhado.jsf?id=594067")
