@@ -104,10 +104,50 @@ def tratamento_documentos_processos(df):
     df.loc[:, 'link'] = df_copy.iloc[:, -2].values  # Usa valores da penúltima coluna de df_copy
 
     return df
-    
+
+def buscar_por_nome_e_exportar_csv(url, nome_busca, nome_arquivo_csv):
+    try:
+        resposta = requests.get(url)
+        resposta.raise_for_status()
+        soup = BeautifulSoup(resposta.content, 'html.parser')
+        dados = {}
+
+        # Busca pelo nome em várias tags comuns de conteúdo
+        for tag in soup.find_all(string=True):
+            if nome_busca.lower() in tag.lower():
+                elemento = tag.parent
+                # Tenta buscar <b> e <td> em um nível mais amplo
+                ancestor = elemento.find_parent(['div', 'table', 'form'])
+                conteudo_b = [b.get_text(strip=True) for b in ancestor.find_all('b')]
+                conteudo_td = [td.get_text(strip=True) for td in ancestor.find_all('td')]
+
+                for b_texto, td_texto in zip(conteudo_b, conteudo_td):
+                    if b_texto not in dados:
+                        dados[b_texto] = []
+                    dados[b_texto].append(td_texto)
+
+       
+        df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in dados.items()]))
+
+        if not df.empty:
+            df.to_csv(nome_arquivo_csv, index=False, encoding='utf-8')
+            print(f"Dados exportados com sucesso para {nome_arquivo_csv}")
+        else:
+            print("Nenhum dado encontrado para exportar.")
+
+        # excluindo a primeira linha do arquivo csv
+        df = pd.read_csv(nome_arquivo_csv)
+        df = df.drop(index=0)
+        df.to_csv(nome_arquivo_csv, index=False, encoding='utf-8')
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Erro ao acessar a URL: {e}")
+    except Exception as e:
+        print(f"Erro durante a extração e exportação: {e}")
+           
 def extrair_data(URL):
     # Legendas das tabelas que queremos extrair
-    legendas_tabelas = ["Documentos do Processo", "Movimentações do Processo"]
+    legendas_tabelas = ["Documentos do Processo", "Movimentações do Processo","Interessados Deste Processo"]
     # Extrair as tabelas e organizá-las em DataFrames
     tabelas_df = extrair_tabelas_para_dataframe(URL, legendas_tabelas)
 
@@ -116,3 +156,7 @@ def extrair_data(URL):
         for legenda, df in tabelas_df.items():
             # Exemplo: Salvar a tabela em CSV
             df.to_csv(f"{legenda}.csv", index=False)
+    buscar_por_nome_e_exportar_csv(URL, 'Dados Gerais do Processo', 'dados_gerais_processo.csv')
+    
+extrair_data("https://www.sipac.ufpi.br/public/jsp/processos/processo_detalhado.jsf?id=594067")
+
