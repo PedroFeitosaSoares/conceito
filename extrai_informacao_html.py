@@ -158,5 +158,5 @@ def extrair_data(URL):
             df.to_csv(f"{legenda}.csv", index=False)
     buscar_por_nome_e_exportar_csv(URL, 'Dados Gerais do Processo', 'dados_gerais_processo.csv')
     
-extrair_data("https://www.sipac.ufpi.br/public/jsp/processos/processo_detalhado.jsf?id=594067")
+
 
