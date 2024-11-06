@@ -1,11 +1,18 @@
 from extraiTextoPDF import ler_texto_arquivos_diretorio
 from dotenv import load_dotenv
 import pandas as pd
-from download_files import download_files
-from extrai_tabela_data import extrair_data
+from download_files import download_files, limpar_arquivos
+from extrai_informacao_html import extrair_data
+from agent_refatorado import AgentResumo
 import os
 
 extrair_data("https://www.sipac.ufpi.br/public/jsp/processos/processo_detalhado.jsf?id=673322#")
+
+load_dotenv('.env')
+
+agent = AgentResumo(os.getenv("API_KEY"))
+
+limpar_arquivos()
 
 df = pd.read_csv("Documentos do Processo.csv")
 
@@ -19,6 +26,7 @@ for link in df['link']:
         download_files(link)
 
 textos_processos = ler_texto_arquivos_diretorio("Arquivos_Processo")
+resumo = agent.gerar_resumo(textos_processos)
 
-print(textos_processos)
+print(resumo)
 print(documentos_nao_baixados)

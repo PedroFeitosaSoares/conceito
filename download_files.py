@@ -70,3 +70,14 @@ def download_file(url, dest_folder, is_pdf=True):
 
     print(f"\nDownloaded: {filename}")
     return True
+
+def limpar_arquivos():
+    diretorio = "Arquivos_Processo"
+    if os.path.exists(diretorio):
+        for filename in os.listdir(diretorio):
+            file_path = os.path.join(diretorio, filename)
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)  
+        print(f"Todos os arquivos em '{diretorio}' foram removidos.")
+    else:
+        print(f"O diretório '{diretorio}' não existe.")
