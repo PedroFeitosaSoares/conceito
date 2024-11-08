@@ -10,8 +10,7 @@ load_dotenv('.env')
 
 agent = AgentResumo(os.getenv("API_KEY"))
 
-def main():
-    link = str(input("Forneça o link o qual você quer o resuo dos processos: "))
+def make(link: str):
     extrair_data(link)
     limpar_arquivos()
 
@@ -29,9 +28,4 @@ def main():
     textos_processos = ler_texto_arquivos_diretorio("Arquivos_Processo")
     resumo = agent.gerar_resumo(textos_processos)
 
-    print(resumo)
-    print(documentos_nao_baixados)
-
-
-if __name__ == '__main__':
-    main()
+    return resumo
