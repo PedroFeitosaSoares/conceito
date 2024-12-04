@@ -29,3 +29,6 @@ def make(link: str):
     resumo = agent.gerar_resumo(textos_processos)
 
     return resumo
+
+user_input = str(input("Digite o link: "))
+print(make(user_input))
