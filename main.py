@@ -32,3 +32,4 @@ def make(link: str):
 
 user_input = str(input("Digite o link: "))
 print(make(user_input))
+

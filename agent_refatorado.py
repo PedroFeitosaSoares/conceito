@@ -19,7 +19,7 @@ class AgentResumo:
         try:
             text_prompt = ChatPromptTemplate.from_messages(
                 [
-                    ("system", "Faça um resumo desse processo administrativo baseado nesse texto."),
+                    ("system", "Faça um resumo de cada documento. Pense passo a passo no sentido de: Quem foi que enviou o processo? Para quem foi enviado? Qual é o assunto principal do documento? E elenque esses pontos. Por fim, junte cada um dos resumos em um texto e me mostre. Não deixe de fazer esse resumo."),
                     ("human", "{input}")
                 ]
             )
