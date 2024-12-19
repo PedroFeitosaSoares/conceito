@@ -6,30 +6,34 @@ from extrai_informacao_html import extrair_data
 from agent_refatorado import AgentResumo
 import os
 
-load_dotenv('.env')
+class ResumoPipeline:
+    def __init__(self, api_key):
+        self.agent = AgentResumo(api_key)
 
-agent = AgentResumo(os.getenv("API_KEY"))
+    def make(self, link: str):
+        extrair_data(link)
+        limpar_arquivos()
 
-def make(link: str):
-    extrair_data(link)
-    limpar_arquivos()
+        df = pd.read_csv("Documentos do Processo.csv")
 
-    df = pd.read_csv("Documentos do Processo.csv")
+        documentos_nao_baixados = 0
 
-    documentos_nao_baixados = 0
+        for link in df['link']:
+            if not isinstance(link, str) or pd.isna(link):
+                print(f"Ignorado: '{link}' não é uma URL válida.")
+                documentos_nao_baixados += 1
+            else:
+                download_files(link)
 
-    for link in df['link']:
-        if not isinstance(link, str) or pd.isna(link):
-            print(f"Ignorado: '{link}' não é uma URL válida.")
-            documentos_nao_baixados = documentos_nao_baixados + 1
-        else:
-            download_files(link)
+        textos_processos = ler_texto_arquivos_diretorio("Arquivos_Processo")
+        resumo = self.agent.gerar_resumo(textos_processos)
 
-    textos_processos = ler_texto_arquivos_diretorio("Arquivos_Processo")
-    resumo = agent.gerar_resumo(textos_processos)
+        return resumo
+    
+if __name__ == "__main__":
+    load_dotenv('.env')
+    api_key = os.getenv("API_KEY")
+    pipeline = Resumo(api_key)
 
-    return resumo
-
-user_input = str(input("Digite o link: "))
-print(make(user_input))
-
+    user_input = str(input("Digite o link: "))
+    print(pipeline.make(user_input))
